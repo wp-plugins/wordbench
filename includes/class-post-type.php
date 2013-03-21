@@ -208,7 +208,7 @@ class WB_Post_Type {
 		$args['labels']          = $post_type->get_labels();
 		$args['description']     = $post_type->get_description();
 		$args['supports']        = $post_type->get_supports();
-		$args['capability_type'] = $post_type->get_name();
+		//$args['capability_type'] = $post_type->get_name();
 		$args['map_meta_cap']    = true;
 		$args['public']          = true;
 		$args['rewrite']         = true;

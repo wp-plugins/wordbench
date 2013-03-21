@@ -22,19 +22,21 @@ function wordbench_post_type_init() {
 		'labels'              => $labels,
 		'description'         => "A custom post type for managing your custom post types...There is no spoon.",
 		'public'              => true,
-		'publicly_queryable'  => false, // Default for 'public' => false
-		'exclude_from_search' => true,  // Default for 'public' => false
+		'publicly_queryable'  => false,
+		'exclude_from_search' => true,
 		'show_ui'             => true,
 		'show_in_menu'        => true,
-		'show_in_nav_menus'   => false, // Default for 'public' => false
-		'capability_type'     => 'post_type',
+		'show_in_admin_bar'   => true,
+		'show_in_nav_menus'   => false,
+	//	'capability_type'     => 'post_type',
 		'map_meta_cap'        => true,
 		'hierarchical'        => true,
 		'has_archive'         => false,
 		'can_export'          => false,
 		'rewrite'             => false,
 		'query_var'           => false,
-		'supports'            => array( 'title', 'editor', 'page-attributes' )
+		'supports'            => array( 'title', 'editor', 'page-attributes' ),
+		'menu_position'       => 5
 	);
 	
 	register_post_type( 'post_type', $args );

@@ -52,6 +52,7 @@ add_action( 'admin_menu', 'wordbench_settings_admin_menu' );
 // Post Types
 add_action( 'init',           'wordbench_post_type_init' );
 add_action( 'add_meta_boxes', 'wordbench_post_type_meta_boxes' );
+//add_action( 'admin_menu',     'wordbench_post_type_menu_page' );
 add_action( 'save_post',      'wordbench_post_type_save_post' );
 
 // Post Formats
