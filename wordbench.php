@@ -22,7 +22,8 @@ Plugin Name: WordBench
 Plugin URI: http://rubberchickenfarm.com/wordbench/
 Author: J Andrew Scott
 Author URI: http://rubberchickenfarm.com/
-Description: WordBench provides admin user interfaces for managing post types, post formats, taxonomies, and roles/capabilities. 
+Description: WordBench provides admin user interfaces for managing post types,
+	post formats, taxonomies, and roles/capabilities. 
 Version: 0.9
 License: GPLv2 or later
 */
@@ -38,7 +39,7 @@ require_once WORDBENCH_INC . 'post-type.php';
 require_once WORDBENCH_INC . 'post-format.php';
 require_once WORDBENCH_INC . 'taxonomy.php';
 require_once WORDBENCH_INC . 'capabilities.php';
-require_once WORDBENCH_INC . 'form-elements.php';
+require_once WORDBENCH_INC . 'form-element.php';
 
 require_once WORDBENCH_INC . 'class-post-type.php';
 

@@ -1,15 +1,14 @@
 <?php
 
-class WB_Select_Element extends WB_Form_Element {
-	public function element( $args = array() ) {
+class WB_Select_Element extends WB_Enum_Element {
+	public function element( $instance = array() ) {
 		$defaults = array(
 			'show_label' => true,
 			'prefix'     => '',
 			'value'      => ''
 		);
 		
-		extract( wp_parse_args( $args, $defaults ), EXTR_SKIP );
-		extract( $this->_params, EXTR_SKIP );
+		extract( wp_parse_args( $instance, $defaults ), EXTR_SKIP );
 		
 		$id   = $this->_get_id( $prefix );
 		$name = $this->_get_name( $prefix );
@@ -17,16 +16,9 @@ class WB_Select_Element extends WB_Form_Element {
 		$attr = array( 'id' => $id );
 		
 		if ( $show_label )
-			echo $this->_html_label( $title, $id );
+			echo $this->_html_label( $this->_title, $id );
 		
-		echo $this->_html_select( $name, $value, $opts, $attr );
-	}
-	
-	public function validate( $value ) {
-		if ( ! in_array( $value, $this->_params['opts'] ) )
-			$value = null;
-		
-		return $value;
+		echo $this->_html_select( $name, $value, $this->_opts, $attr );
 	}
 	
 	protected function _html_select( $name, $value, $opts = array(), $attr = array() ) {

@@ -5,7 +5,8 @@
  * and data validation are handled by this class and its child classes.
  */
 class WB_Form_Element {
-	protected $_params;
+	protected $_title;
+	protected $_name;
 	
 	/**
 	 * Constructor
@@ -17,11 +18,13 @@ class WB_Form_Element {
 	public function __construct( $args = array() ) {
 		$defaults = array(
 			'title' => null,
-			'name'  => null,
-			'opts'  => array()
+			'name'  => null
 		);
 		
-		$this->_params = wp_parse_args( $args, $defaults );
+		$args = wp_parse_args( $args, $defaults );
+		
+		$this->_title = $args['title'];
+		$this->_name  = $args['name'];
 	}
 	
 	/**
@@ -38,9 +41,9 @@ class WB_Form_Element {
 	/**
 	 * Renders the form element. Child classes MUST extend this method.
 	 * 
-	 * @param array $args Instance data for this specific field.
+	 * @param array $instance Instance data for this specific field.
 	 */
-	public function element( $args = array() ) {
+	public function element( $instance = array() ) {
 		die( __CLASS__ . ' must override WB_Form_Element::element()' );
 	}
 	

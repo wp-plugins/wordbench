@@ -16,6 +16,7 @@ function wordbench_get_form_element( $args = array() ) {
 	extract( wp_parse_args( $args, $defaults ), EXTR_SKIP );
 	
 	require_once WORDBENCH_INC . 'class-form-element.php';
+	require_once WORDBENCH_INC . 'class-enum-element.php';
 	
 	$file  = WORDBENCH_INC . 'class-' . $type . '-element.php';
 	$class = 'WB_' . str_replace( ' ', '_', wordbench_labelize( $type ) ) . '_Element';

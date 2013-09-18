@@ -1,18 +1,17 @@
 <?php
 
-class WB_Radio_Element extends WB_Form_Element {
-	public function element( $args = array() ) {
+class WB_Radio_Element extends WB_Enum_Element {
+	public function element( $instance = array() ) {
 		$defaults = array(
 			'prefix' => '',
 			'value'  => ''
 		);
 		
-		extract( wp_parse_args( $args, $defaults ), EXTR_SKIP );
-		extract( $this->_params, EXTR_SKIP );
+		extract( wp_parse_args( $instance, $defaults ), EXTR_SKIP );
 		
 		$html = '';
 		
-		foreach ( $opts as $opt ) {
+		foreach ( $this->_opts as $opt ) {
 			$key = wordbench_sanitize( $opt );
 			
 			$id   = $this->_get_id( $prefix ) . '-' . $key,
@@ -32,13 +31,6 @@ class WB_Radio_Element extends WB_Form_Element {
 		echo $this->_html_tag( 'ul', $html, array(
 			'class' => 'form-element radio-element'
 		) );
-	}
-	
-	public function validate( $value ) {
-		if ( ! in_array( $value, $this->_params['opts'] ) )
-			$value = '';
-		
-		return $value;
 	}
 }
 
