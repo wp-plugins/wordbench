@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Callback for admin_init action. Initializes setting for this plugin.
+ */
 function wordbench_settings_admin_init() {
 	register_setting( 'wordbench_settings', 'wordbench_settings',
 		'wordbench_settings_validate' );
@@ -12,11 +15,17 @@ function wordbench_settings_admin_init() {
 		'wordbench', 'wordbench_main' );
 }
 
+/**
+ * Callback for admin_menu action. Adds plugin settings page to admin interface.
+ */
 function wordbench_settings_admin_menu() {
 	add_options_page( 'WordBench Plugin Settings', 'WordBench',
 		'manage_options', 'wordbench-settings', 'wordbench_settings_form' );
 }
 
+/**
+ * Callback for register_setting(). Validates user-submitted form data.
+ */
 function wordbench_settings_validate( $args = array() ) {
 	$settings = wordbench_get_current_settings();
 	$settings['enable_comments'] = isset( $args['enable_comments'] );
@@ -24,6 +33,9 @@ function wordbench_settings_validate( $args = array() ) {
 	return apply_filters( 'wordbench_validate_settings', $settings );
 }
 
+/**
+ * Callback for wordbench_settings_admin_menu(). Renders HTML for settings page.
+ */
 function wordbench_settings_form() {
 ?>
 <div class="wrap">
@@ -38,12 +50,18 @@ function wordbench_settings_form() {
 <?php
 }
 
+/**
+ * Callback for add_settings_section(). Renders section header on settings page.
+ */
 function wordbench_settings_main_section() {
 ?>
 <p>This is the main section.</p>
 <?php
 }
 
+/**
+ * Callback for add_settings_field(). Renders input field for setting.
+ */
 function wordbench_settings_enable_comments_field() {
 	$settings = wordbench_get_current_settings();
 	
@@ -54,19 +72,32 @@ function wordbench_settings_enable_comments_field() {
 <?php
 }
 
+/**
+ * Returns default values for all plugin settings.
+ * 
+ * @see wordbench_get_current_settings()
+ * @return array Returns default settings as associative array.
+ */
 function wordbench_get_default_settings() {
-	$default_settings = array(
+	$defaults = array(
 		'enable_comments' => true
 	);
 	 
-	return apply_filters( 'wordbench_default_settings', $default_settings );
+	return apply_filters( 'wordbench_default_settings', $defaults );
 }
 
+/**
+ * Returns current values for all plugin settings.
+ * 
+ * @uses wordbench_get_default_settings()
+ * @return array Returns default settings as associative array.
+ */
 function wordbench_get_current_settings() {
-	$settings = get_option( 'wordbench_settings', array() );
 	$defaults = wordbench_get_default_settings();
+	$settings = get_option( 'wordbench_settings', array() );
+	$settings = wp_parse_args( $settings, $defaults );
 	
-	return wp_parse_args( $settings, $defaults );
+	return apply_filters( 'wordbench_current_settings', $settings );
 }
 
 ?>

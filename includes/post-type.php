@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Callback for init action. Initializes custom post types.
+ * 
+ * @uses WB_Post_Type::register()
+ */
 function wordbench_post_type_init() {
 	$labels = array(
 		'name'               => 'Post Types',
@@ -69,6 +74,12 @@ function wordbench_post_type_init() {
 	}
 }
 
+/**
+ * Callback for add_meta_boxes action. Initializes meta boxes for post type
+ * manager and custom post type fields.
+ * 
+ * @uses WB_Post_Type::fetch_all()
+ */
 function wordbench_post_type_meta_boxes() {
 	add_meta_box( 'wb-post-type-caps', 'Capabilities',
 		'wordbench_post_type_meta_caps', 'post_type', 'advanced' );
@@ -93,6 +104,15 @@ function wordbench_post_type_meta_boxes() {
 	}
 }
 
+/**
+ * Callback for add_meta_box(). Renders meta box for custom post type
+ * capabilities.
+ * 
+ * @see wordbench_post_type_meta_boxes()
+ * @uses wordbench_labelize()
+ * @param object $post The post containing metadata for a custom post type.
+ * @param array $args Unused.
+ */
 function wordbench_post_type_meta_caps( $post, $args = array() ) {
 	global $wp_roles;
 	
@@ -147,6 +167,15 @@ function wordbench_post_type_meta_caps( $post, $args = array() ) {
 <?php
 }
 
+/**
+ * Callback for add_meta_box(). Renders meta box for custom post type labels.
+ * 
+ * @see wordbench_post_type_meta_boxes()
+ * @uses wordbench_labelize()
+ * @uses WB_Post_Type::get_static_labels()
+ * @param object $post The post containing metadata for a custom post type.
+ * @param array $args Unused.
+ */
 function wordbench_post_type_meta_labels( $post, $args = array() ) {
 	$post_type_labels = get_post_meta( $post->ID, '_post_type_labels', true );
 	
@@ -211,6 +240,14 @@ function wordbench_post_type_meta_labels( $post, $args = array() ) {
 <?php
 }
 
+/**
+ * Callback for add_meta_box(). Renders meta box for custom post type fields.
+ * 
+ * @see wordbench_post_type_meta_boxes()
+ * @uses wordbench_post_type_field_types()
+ * @param object $post The post containing metadata for a custom post type.
+ * @param array $args Unused.
+ */
 function wordbench_post_type_meta_fields( $post, $args = array() ) {
 	$post_type_fields = get_post_meta( $post->ID, '_post_type_fields', true );
 	
@@ -318,6 +355,16 @@ function wordbench_post_type_meta_fields( $post, $args = array() ) {
 <?php
 }
 
+/**
+ * Callback for add_meta_box(). Renders meta box for custom post type settings.
+ * 
+ * @see wordbench_post_type_meta_boxes()
+ * @uses wordbench_labelize()
+ * @uses WB_Post_Type::get_default_settings()
+ * @uses WB_Post_Type::get_static_settings()
+ * @param object $post The post containing metadata for a custom post type.
+ * @param array $args Unused.
+ */
 function wordbench_post_type_meta_settings( $post, $args = array() ) {
 	$post_type_settings = get_post_meta( $post->ID, '_post_type_settings', true );
 	
@@ -343,6 +390,16 @@ function wordbench_post_type_meta_settings( $post, $args = array() ) {
 <?php
 }
 
+/**
+ * Callback for add_meta_box(). Renders meta box for custom post type supports.
+ * 
+ * @see wordbench_post_type_meta_boxes()
+ * @uses wordbench_labelize()
+ * @uses WB_Post_Type::get_default_settings()
+ * @uses WB_Post_Type::get_static_settings()
+ * @param object $post The post containing metadata for a custom post type.
+ * @param array $args Unused.
+ */
 function wordbench_post_type_meta_supports( $post, $args = array() ) {
 	$post_type_supports = get_post_meta( $post->ID, '_post_type_supports', true );
 	
@@ -368,6 +425,14 @@ function wordbench_post_type_meta_supports( $post, $args = array() ) {
 <?php
 }
 
+/**
+ * Callback for add_meta_box(). Renders meta box for post's custom fields.
+ * 
+ * @see wordbench_post_type_meta_boxes()
+ * @uses wordbench_the_form_element()
+ * @param object $post The post currently being editted.
+ * @param array $args The the custom field values as associative array.
+ */
 function wordbench_post_type_meta_edit( $post, $args = array() ) {
 ?>
 <table>
@@ -391,6 +456,14 @@ function wordbench_post_type_meta_edit( $post, $args = array() ) {
 <?php
 }
 
+/**
+ * Callback for save_post action. Saves custom post type metadata and field
+ * values.
+ * 
+ * @uses wordbench_post_type_save_metadata()
+ * @uses wordbench_post_type_save_instance()
+ * @param int $post_id The ID of the post being saved.
+ */
 function wordbench_post_type_save_post( $post_id ) {
 	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
 	
@@ -399,108 +472,144 @@ function wordbench_post_type_save_post( $post_id ) {
 	// this might be redundant
 	if ( 'auto-draft' == get_post( $post_id )->post_status ) return;
 	
-	if ( 'post_type' == $_REQUEST['post_type'] ) {
-		if ( ! current_user_can( 'edit_post_type', $post_id ) ) return;
+	if ( 'post_type' == $_REQUEST['post_type'] )
+		wordbench_post_type_save_metadata( $post_id );
+	elseif ( @is_array( $_REQUEST['post_meta'] ) )
+		wordbench_post_type_save_instance( $post_id );
+}
+
+/**
+ * Saves custom post type metadata.
+ * 
+ * @see wordbench_post_type_save_post()
+ * @uses wordbench_sanitize()
+ * @uses WB_Post_Type::get_static_labels()
+ * @uses WB_Post_Type::get_static_settings()
+ * @uses WB_Post_Type::get_static_supports()
+ * @uses WB_Post_Type::register()
+ * @param int $post_id The ID of the post containing metadata for the custom
+ *    post type.
+ */
+function wordbench_post_type_save_metadata( $post_id ) {
+	if ( ! current_user_can( 'edit_post_type', $post_id ) ) return;
+	
+	$meta = $_REQUEST['post_type_meta'];
+	
+	$caps     = array();
+	$labels   = array();
+	$fields   = array();
+	$settings = array();
+	$supports = array();
+	
+	if ( isset( $meta['caps'] ) && is_array( $meta['caps'] ) ) {
+		global $wp_roles;
 		
-		$meta = $_REQUEST['post_type_meta'];
+		$static_roles = $wp_roles->get_names();
+		$static_caps  = (array) get_post_type_object( 'post_type' )->cap;
 		
-		$caps     = array();
-		$labels   = array();
-		$fields   = array();
-		$settings = array();
-		$supports = array();
-		
-		if ( isset( $meta['caps'] ) && is_array( $meta['caps'] ) ) {
-			global $wp_roles;
-			
-			$static_roles = $wp_roles->get_names();
-			$static_caps  = (array) get_post_type_object( 'post_type' )->cap;
-			
-			foreach ( array_keys( $static_roles ) as $role_key ) {
-				foreach ( array_keys( $static_caps ) as $cap_key ) {
-					$caps[$role_key][$cap_key] = isset( $meta['caps'][$role_key][$cap_key] );
-				}
+		foreach ( array_keys( $static_roles ) as $role_key ) {
+			foreach ( array_keys( $static_caps ) as $cap_key ) {
+				$caps[$role_key][$cap_key] = isset( $meta['caps'][$role_key][$cap_key] );
 			}
 		}
+	}
+	
+	if ( isset( $meta['labels'] ) && is_array( $meta['labels'] ) ) {
+		$static_labels = WB_Post_Type::get_static_labels();
 		
-		if ( isset( $meta['labels'] ) && is_array( $meta['labels'] ) ) {
-			$static_labels = WB_Post_Type::get_static_labels();
-			
-			foreach ( $static_labels as $key => $label ) {
-				if ( ! empty( $meta['labels'][$key] ) )
-					$labels[$key] = $meta['labels'][$key];
-			}
+		foreach ( $static_labels as $key => $label ) {
+			if ( ! empty( $meta['labels'][$key] ) )
+				$labels[$key] = $meta['labels'][$key];
 		}
-		
-		if ( isset( $meta['fields'] ) && is_array( $meta['fields'] ) ) {
-			for ( $i = 0, $n = count( $meta['fields']['title'] ); $i < $n; $i++ ) {
-				if ( ! empty( $meta['fields']['title'][$i] ) ) {
-					$name = wordbench_sanitize( $meta['fields']['title'][$i] );
-					$opts = explode( PHP_EOL, $meta['fields']['opts'][$i] );
+	}
+	
+	if ( isset( $meta['fields'] ) && is_array( $meta['fields'] ) ) {
+		for ( $i = 0, $n = count( $meta['fields']['title'] ); $i < $n; $i++ ) {
+			if ( ! empty( $meta['fields']['title'][$i] ) ) {
+				$name = wordbench_sanitize( $meta['fields']['title'][$i] );
+				$opts = explode( PHP_EOL, $meta['fields']['opts'][$i] );
+				
+				foreach ( $opts as $index => $opt ) {
+					$opts[$index] = trim( $opt );
 					
-					foreach ( $opts as $index => $opt ) {
-						$opts[$index] = trim( $opt );
-						
-						if ( empty( $opts[$index] ) )
-							unset( $opts[$index] );
-					}
-					
-					$fields[] = array(
-						'name'  => $name,
-						'title' => $meta['fields']['title'][$i],
-						'type'  => $meta['fields']['type'][$i],
-						'opts'  => $opts
-					);
+					if ( empty( $opts[$index] ) )
+						unset( $opts[$index] );
 				}
+				
+				$fields[] = array(
+					'name'  => $name,
+					'title' => $meta['fields']['title'][$i],
+					'type'  => $meta['fields']['type'][$i],
+					'opts'  => $opts
+				);
 			}
 		}
+	}
+	
+	if ( isset( $meta['settings'] ) && is_array( $meta['settings'] ) ) {
+		$static_settings = WB_Post_Type::get_static_settings();
 		
-		if ( isset( $meta['settings'] ) && is_array( $meta['settings'] ) ) {
-			$static_settings = WB_Post_Type::get_static_settings();
-			
-			foreach ( $static_settings as $key => $setting ) {
-				$settings[$key] = isset( $meta['settings'][$key] );
-			}
+		foreach ( $static_settings as $key => $setting ) {
+			$settings[$key] = isset( $meta['settings'][$key] );
 		}
+	}
+	
+	if ( isset( $meta['supports'] ) && is_array( $meta['supports'] ) ) {
+		$static_supports = WB_Post_Type::get_static_supports();
 		
-		if ( isset( $meta['supports'] ) && is_array( $meta['supports'] ) ) {
-			$static_supports = WB_Post_Type::get_static_supports();
-			
-			foreach ( $static_supports as $key => $support ) {
-				$supports[$key] = isset( $meta['supports'][$key] );
-			}
+		foreach ( $static_supports as $key => $support ) {
+			$supports[$key] = isset( $meta['supports'][$key] );
 		}
+	}
+	
+	update_post_meta( $post_id, '_post_type_caps',     $caps     );
+	update_post_meta( $post_id, '_post_type_labels',   $labels   );
+	update_post_meta( $post_id, '_post_type_fields',   $fields   );
+	update_post_meta( $post_id, '_post_type_settings', $settings );
+	update_post_meta( $post_id, '_post_type_supports', $supports );
+	
+	global $wp_rewrite;
+	
+	WB_Post_Type::register( get_post( $post_id ) );
+	
+	$wp_rewrite->flush_rules();
+}
+
+/**
+ * Saves custom post type field values.
+ * 
+ * @see wordbench_post_type_save_post()
+ * @uses wordbench_sanitize()
+ * @uses wordbench_get_form_element()
+ * @uses WB_Form_Element::validate()
+ * @uses WB_Post_Type::fetch()
+ * @uses WB_Post_Type::get_fields()
+ * @param int $post_id The ID of the post being saved.
+ */
+function wordbench_post_type_save_instance( $post_id ) {
+	$post_type = WB_Post_Type::fetch( $_REQUEST['post_type'] );
+	$post_meta = $_REQUEST['post_meta'];
+	
+	$fields = $post_type->get_fields();
+	
+	foreach ( $fields as $field ) {
+		$element = wordbench_get_form_element( $field );
 		
-		update_post_meta( $post_id, '_post_type_caps',     $caps     );
-		update_post_meta( $post_id, '_post_type_labels',   $labels   );
-		update_post_meta( $post_id, '_post_type_fields',   $fields   );
-		update_post_meta( $post_id, '_post_type_settings', $settings );
-		update_post_meta( $post_id, '_post_type_supports', $supports );
+		$meta_key   = '_' . $field['name'];
+		$meta_value = $post_meta[$field['name']];
 		
-		global $wp_rewrite;
+		$meta_value = $element->validate( $meta_value );
 		
-		WB_Post_Type::register( get_post( $post_id ) );
-		
-		$wp_rewrite->flush_rules();
-	} elseif ( @is_array( $_REQUEST['post_meta'] ) ) {
-		$post_type = WB_Post_type::fetch( $_REQUEST['post_type'] );
-		$post_meta = $_REQUEST['post_meta'];
-		
-		$fields = $post_type->get_fields();
-		
-		foreach ( $fields as $field ) {
-			$element = wordbench_get_form_element( $field );
-			
-			$meta_key   = '_' . $field['name'];
-			$meta_value = $post_meta[$field['name']];
-			
-			$meta_value = $element->validate( $meta_value );
-			
-			update_post_meta( $post_id, $meta_key, $meta_value );
-		}
+		update_post_meta( $post_id, $meta_key, $meta_value );
 	}
 }
 
+/**
+ * Returns array of input types for custom post type fields.
+ * 
+ * @see wordbench_post_type_meta_fields()
+ * @return array Returns input types and names as associative array.
+ */
 function wordbench_post_type_field_types() {
 	return array(
 		'text'     => 'Inline Text',
